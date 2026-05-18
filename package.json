@@ -2,15 +2,22 @@
 	"name": "npm-publish-checker",
 	"version": "1.0.1",
 	"description": "Check if the latest version of a package is correctly published.",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mathiasbynens/npm-publish-checker.git"
+	},
 	"main": "index.mjs",
 	"bin": {
 		"npm-publish-checker": "index.mjs"
 	},
 	"license": "MIT",
 	"scripts": {
-		"format": "prettier . --write"
+		"format": "prettier . --write && npm pkg fix"
 	},
 	"devDependencies": {
 		"prettier": "^3.8.3"
-	}
+	},
+	"files": [
+		"index.mjs"
+	]
 }
