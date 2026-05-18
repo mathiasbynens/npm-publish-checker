@@ -1,6 +1,6 @@
-# npm publish checker
+# `npm-publish-checker` [![npm-publish-checker on npm](https://img.shields.io/npm/v/npm-publish-checker)](https://www.npmjs.com/package/npm-publish-checker)
 
-A quick Node.js CLI to check if the latest version of a package is correctly published by comparing the `time` and `versions` properties in the registry.
+A CLI to check if the latest version of a package is correctly published by comparing the `time` and `versions` properties in the registry.
 
 ## Usage
 
