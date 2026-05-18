@@ -1,6 +1,6 @@
 {
 	"name": "npm-publish-checker",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "Check if the latest version of a package is correctly published.",
 	"repository": {
 		"type": "git",
