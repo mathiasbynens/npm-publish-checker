@@ -1,6 +1,6 @@
 {
 	"name": "npm-publish-checker",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Check if the latest version of a package is correctly published.",
 	"main": "index.mjs",
 	"bin": {
