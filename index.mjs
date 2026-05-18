@@ -3,8 +3,8 @@
 const arg = process.argv[2];
 
 if (!arg) {
-  console.log('Usage: npm-publish-checker <package>[@version]');
-  process.exit(1);
+	console.log('Usage: npm-publish-checker <package>[@version]');
+	process.exit(1);
 }
 
 const [packageName, requestedVersion] = arg.split('@');
@@ -18,79 +18,109 @@ const bold = '\x1B[1m';
 const dim = '\x1B[2m';
 
 const checkVersion = async (packageName, requestedVersion) => {
-  const target = requestedVersion ? `${packageName}@${requestedVersion}` : packageName;
-  console.log(`\n🔍 Checking ${bold}${target}${reset}...\n`);
+	const target = requestedVersion
+		? `${packageName}@${requestedVersion}`
+		: packageName;
+	console.log(`\n🔍 Checking ${bold}${target}${reset}…\n`);
 
-  const url = `https://registry.npmjs.org/${packageName}`;
+	const timeCmd = '`npm view ' + packageName + ' time`';
+	const versionsCmd = '`npm view ' + packageName + ' versions`';
 
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`${red}❌ Failed to fetch registry data: ${response.statusText}${reset}`);
-      return;
-    }
+	const url = `https://registry.npmjs.org/${packageName}`;
 
-    const data = await response.json();
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			console.error(
+				`${red}❌ Failed to fetch registry data: ${response.statusText}${reset}`,
+			);
+			return;
+		}
 
-    const timeObj = data.time;
-    const versionsObj = data.versions;
+		const data = await response.json();
 
-    if (!timeObj || !versionsObj) {
-      console.error(`${red}❌ Invalid registry data structure${reset}`);
-      return;
-    }
+		const timeObj = data.time;
+		const versionsObj = data.versions;
 
-    // Filter out 'created' and 'modified' keys from time object
-    const versionTimes = Object.keys(timeObj).filter(key => key !== 'created' && key !== 'modified');
+		if (!timeObj || !versionsObj) {
+			console.error(`${red}❌ Invalid registry data structure${reset}`);
+			return;
+		}
 
-    if (versionTimes.length === 0) {
-      console.log(`${yellow}⚠️  No versions found in \`time\` property${reset}`);
-      return;
-    }
+		const versionTimes = Object.keys(timeObj).filter(
+			(key) => key !== 'created' && key !== 'modified',
+		);
 
-    // Find the version with the latest timestamp
-    const latestInTime = versionTimes.reduce((a, b) => {
-      return new Date(timeObj[a]) > new Date(timeObj[b]) ? a : b;
-    });
+		if (versionTimes.length === 0) {
+			console.log(`${yellow}⚠️  No versions found in ${timeCmd}${reset}`);
+			return;
+		}
 
-    const versionKeys = Object.keys(versionsObj);
-    const latestInVersions = versionKeys[versionKeys.length - 1];
+		const latestInTime = versionTimes.reduce((a, b) => {
+			return new Date(timeObj[a]) > new Date(timeObj[b]) ? a : b;
+		});
 
-    console.log(`📊 ${bold}Registry status:${reset}`);
+		const versionKeys = Object.keys(versionsObj);
+		const latestInVersions = versionKeys[versionKeys.length - 1];
 
-    if (requestedVersion) {
-      const inTime = versionTimes.includes(requestedVersion);
-      const inVersions = versionKeys.includes(requestedVersion);
+		console.log(`📊 ${bold}Registry status:${reset}`);
 
-      console.log(`  Present in \`time\`:     ${inTime ? green + '✅ Yes' : red + '❌ No'}${reset}`);
-      console.log(`  Present in \`versions\`: ${inVersions ? green + '✅ Yes' : red + '❌ No'}${reset}\n`);
+		if (requestedVersion) {
+			const inTime = versionTimes.includes(requestedVersion);
+			const inVersions = versionKeys.includes(requestedVersion);
 
-      if (inTime && !inVersions) {
-        console.log(`${yellow}⚠️  Flag: the version is in the \`time\` property but missing from the \`versions\` property.${reset}`);
-      } else if (!inTime && inVersions) {
-        console.log(`${yellow}⚠️  Flag: the version is in the \`versions\` property but missing from the \`time\` property.${reset}`);
-      } else if (!inTime && !inVersions) {
-        console.log(`${red}❌ Flag: ${packageName}@${requestedVersion} was not found in either property.${reset}`);
-      } else {
-        console.log(`${green}✅ ${packageName}@${requestedVersion} is correctly published in both \`time\` and \`versions\`.${reset}`);
-      }
-      
-      console.log(`\n✨ Latest version in \`time\` is: ${cyan}${latestInTime}${reset}`);
-    } else {
-      console.log(`  Latest in \`time\`:     ${cyan}${latestInTime}${reset}`);
-      console.log(`  Latest in \`versions\`: ${cyan}${latestInVersions}${reset}\n`);
+			const formatStatus = (present) =>
+				present ? `${green}✅ yes` : `${red}❌ no`;
+			console.log(
+				`  Present in ${timeCmd}:     ${formatStatus(inTime)}${reset}`,
+			);
+			console.log(
+				`  Present in ${versionsCmd}: ${formatStatus(inVersions)}${reset}\n`,
+			);
 
-      if (latestInTime !== latestInVersions) {
-        console.log(`${yellow}⚠️  Flag: the latest version in the \`time\` property does not match the most recent version in the \`versions\` property.${reset}`);
-        console.log(`${dim}💡 This might indicate that the publish process is not fully completed or there is a replication lag.${reset}`);
-      } else {
-        console.log(`${green}✅ ${packageName}@${latestInTime} was correctly published.${reset}`);
-      }
-    }
+			if (inTime && !inVersions) {
+				console.log(
+					`${yellow}⚠️  Flag: the version is in ${timeCmd} but missing from ${versionsCmd}.${reset}`,
+				);
+			} else if (!inTime && inVersions) {
+				console.log(
+					`${yellow}⚠️  Flag: the version is in ${versionsCmd} but missing from ${timeCmd}.${reset}`,
+				);
+			} else if (!inTime && !inVersions) {
+				console.log(
+					`${red}❌ Flag: ${packageName}@${latestInTime} is missing from ${timeCmd} and ${versionsCmd}.${reset}`,
+				);
+			} else {
+				console.log(
+					`${green}✅ ${packageName}@${latestInTime} is correctly published.${reset}`,
+				);
+			}
 
-  } catch (error) {
-    console.error(`${red}❌ Error occurred: ${error.message}${reset}`);
-  }
+			console.log(
+				`\n✨ Latest version in ${timeCmd} is: ${cyan}${latestInTime}${reset}`,
+			);
+		} else {
+			console.log(`  Latest in ${timeCmd}:     ${cyan}${latestInTime}${reset}`);
+			console.log(
+				`  Latest in ${versionsCmd}: ${cyan}${latestInVersions}${reset}\n`,
+			);
+
+			if (latestInTime !== latestInVersions) {
+				console.log(
+					`${yellow}⚠️ The latest version in ${timeCmd} does not match the latest version in ${versionsCmd}.${reset}`,
+				);
+				console.log(
+					`${dim}💡 This might indicate that the publish process is not fully completed or there is a replication lag.${reset}`,
+				);
+			} else {
+				console.log(
+					`${green}✅ ${packageName}@${latestInTime} was correctly published.${reset}`,
+				);
+			}
+		}
+	} catch (error) {
+		console.error(`${red}❌ Error occurred: ${error.message}${reset}`);
+	}
 };
 
 await checkVersion(packageName, requestedVersion);
