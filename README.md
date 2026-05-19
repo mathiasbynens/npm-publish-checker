@@ -27,4 +27,4 @@ If there is a discrepancy, it flags it.
 
 ## Why
 
-[npm’s automated processes might decide to silently unpublish packages.](https://github.com/puppeteer/puppeteer/issues/14986#issuecomment-4459734551) This tool provides an easy way to find out whether this has happened, or whether you’re just observing a registry caching issue.
+This tool helps you differentiate between a registry caching issue and [a package that has been silently removed by npm’s automated processes](https://github.com/puppeteer/puppeteer/issues/14986#issuecomment-4459734551).
